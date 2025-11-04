@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supplier-mcp
+  namespace: zava-shop
+  labels:
+    app: supplier-mcp
+    component: mcp-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: supplier-mcp
+  template:
+    metadata:
+      labels:
+        app: supplier-mcp
+        component: mcp-server
+    spec:
+      containers:
+      - name: supplier-mcp
+        image: zavashopacr13487.azurecr.io/zava-supplier-mcp:latest
+        ports:
+        - containerPort: 8002
+        env:
+        - name: PORT
+          value: "8002"
+        - name: DEV_GUEST_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: zava-secrets
+              key: DEV_GUEST_TOKEN
+        - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: zava-secrets
+              key: APPLICATIONINSIGHTS_CONNECTION_STRING
+        - name: OTEL_PYTHON_EXCLUDED_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: zava-config
+              key: OTEL_PYTHON_EXCLUDED_URLS
+        # Temporarily disabled health checks
+        # livenessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: 8002
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+        #   timeoutSeconds: 10
+        #   failureThreshold: 3
+        # readinessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: 8002
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 5
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supplier-mcp-service
+  namespace: zava-shop
+  labels:
+    app: supplier-mcp
+    component: mcp-server
+spec:
+  selector:
+    app: supplier-mcp
+  ports:
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+  type: ClusterIP

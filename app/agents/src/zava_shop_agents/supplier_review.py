@@ -20,10 +20,29 @@ import os
 from agent_framework.azure import AzureOpenAIChatClient
 from zava_shop_agents import MCPStreamableHTTPToolOTEL
 
-chat_client = AzureOpenAIChatClient(api_key=os.environ.get("AZURE_OPENAI_API_KEY_GPT5"),
-                                    endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT_GPT5"),
-                                    deployment_name=os.environ.get("AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5"),
-                                    api_version=os.environ.get("AZURE_OPENAI_ENDPOINT_VERSION_GPT5", "2024-02-15-preview"))
+# Use API key if available, otherwise use DefaultAzureCredential (for workload identity)
+api_key = os.environ.get("AZURE_OPENAI_API_KEY_GPT5")
+chat_client_kwargs = {
+    "endpoint": os.environ.get("AZURE_OPENAI_ENDPOINT_GPT5"),
+    "deployment_name": os.environ.get("AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5"),
+    "api_version": os.environ.get("AZURE_OPENAI_ENDPOINT_VERSION_GPT5", "2024-02-15-preview")
+}
+
+if api_key:
+    chat_client_kwargs["api_key"] = api_key
+else:
+    # Use DefaultAzureCredential for workload identity
+    from azure.identity import DefaultAzureCredential
+    credential = DefaultAzureCredential()
+    
+    # Create a token provider that returns just the token string
+    def get_azure_ad_token() -> str:
+        token = credential.get_token("https://cognitiveservices.azure.com/.default")
+        return token.token
+    
+    chat_client_kwargs["ad_token_provider"] = get_azure_ad_token
+
+chat_client = AzureOpenAIChatClient(**chat_client_kwargs)
 
 supplier_mcp_tools = MCPStreamableHTTPToolOTEL(
     name="SupplierMCP",

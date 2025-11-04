@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: zava-shop-metrics
+  namespace: zava-shop
+  labels:
+    app: zava-shop
+spec:
+  selector:
+    matchLabels:
+      app: api
+  endpoints:
+  - port: "8000"
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: finance-mcp-metrics
+  namespace: zava-shop
+spec:
+  selector:
+    matchLabels:
+      app: finance-mcp
+  endpoints:
+  - port: "8002"
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: supplier-mcp-metrics
+  namespace: zava-shop
+spec:
+  selector:
+    matchLabels:
+      app: supplier-mcp
+  endpoints:
+  - port: "8002"
+    path: /metrics
+    interval: 30s

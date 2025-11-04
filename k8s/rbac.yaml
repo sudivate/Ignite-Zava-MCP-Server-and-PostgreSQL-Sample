@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: zava-shop-sa
+  namespace: zava-shop
+  annotations:
+    azure.workload.identity/client-id: "faf97599-b0c1-449d-834c-1f2fc3696afb"  # AKS cluster managed identity
+  labels:
+    azure.workload.identity/use: "true"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: zava-shop
+  name: zava-shop-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: zava-shop-rolebinding
+  namespace: zava-shop
+subjects:
+- kind: ServiceAccount
+  name: zava-shop-sa
+  namespace: zava-shop
+roleRef:
+  kind: Role
+  name: zava-shop-role
+  apiGroup: rbac.authorization.k8s.io

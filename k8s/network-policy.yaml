@@ -1,0 +1,59 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: zava-network-policy
+  namespace: zava-shop
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow ingress from within the namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: zava-shop
+  # Allow ingress from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  # Allow LoadBalancer health checks
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8002
+  egress:
+  # Allow all egress (can be restricted based on requirements)
+  - {}
+---
+# Separate network policy for database
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-network-policy
+  namespace: zava-shop
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  ingress:
+  # Only allow connections from API and MCP servers
+  - from:
+    - podSelector:
+        matchLabels:
+          component: api-server
+  - from:
+    - podSelector:
+        matchLabels:
+          component: mcp-server
+    ports:
+    - protocol: TCP
+      port: 5432

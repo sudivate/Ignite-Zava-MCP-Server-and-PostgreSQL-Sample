@@ -1,0 +1,43 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-pdb
+  namespace: zava-shop
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: finance-mcp-pdb
+  namespace: zava-shop
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: finance-mcp
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: supplier-mcp-pdb
+  namespace: zava-shop
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: supplier-mcp
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: zava-shop
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: frontend

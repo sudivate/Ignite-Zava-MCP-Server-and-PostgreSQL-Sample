@@ -44,7 +44,7 @@ ENV PYTHONPATH=/app/mcp:/app/shared/src
 ENV PYTHONUNBUFFERED=1
 
 # Use the startup script as the entrypoint
-ENTRYPOINT ["uv", "run", "python", "-m", "uvicorn", "zava_shop_api.app:app", "--port", "8000", "--host", "0.0.0.0", "--workers", "2"]
+ENTRYPOINT ["uv", "run", "python", "-m", "uvicorn", "zava_shop_api.app:app", "--port", "8000", "--host", "0.0.0.0", "--workers", "1"]
 
 # Labels
 LABEL maintainer="Zava Shop Team"

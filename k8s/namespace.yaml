@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zava-shop
+  labels:
+    app.kubernetes.io/name: zava-shop
+    app.kubernetes.io/part-of: zava-shop-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zava-config
+  namespace: zava-shop
+data:
+  OTEL_PYTHON_EXCLUDED_URLS: "/health"
+  AZURE_OPENAI_ENDPOINT_VERSION_GPT5: "2024-12-01-preview"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: zava-secrets
+  namespace: zava-shop
+type: Opaque
+data:
+  # Base64 encoded secrets
+  DEV_GUEST_TOKEN: ""
+  APPLICATIONINSIGHTS_CONNECTION_STRING: ""
+  AZURE_OPENAI_ENDPOINT_GPT5: ""
+  AZURE_OPENAI_API_KEY_GPT5: ""
+  AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5: ""
+  VITE_CHATKIT_DOMAIN_KEY: ""  # Optional - not configured
+  POSTGRES_PASSWORD: ""  # "change-me" - change this in production
