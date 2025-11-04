@@ -12,7 +12,7 @@ metadata:
   name: zava-config
   namespace: zava-shop
 data:
-  OTEL_PYTHON_EXCLUDED_URLS: "/health"
+  OTEL_PYTHON_EXCLUDED_URLS: "/health,/ws/.*"
   AZURE_OPENAI_ENDPOINT_VERSION_GPT5: "2024-12-01-preview"
 ---
 apiVersion: v1
