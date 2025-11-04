@@ -14,7 +14,7 @@ metadata:
 data:
   OTEL_PYTHON_EXCLUDED_URLS: "/health,/ws/.*"
   AZURE_OPENAI_ENDPOINT_VERSION_GPT5: "2024-12-01-preview"
-  AZURE_AI_PROJECT_ENDPOINT: "https://zava-shop-ai-foundry.services.ai.azure.com/api/projects/zava-shop-ai-foundry-project"
+  AZURE_AI_PROJECT_ENDPOINT: ""
 ---
 apiVersion: v1
 kind: Secret
@@ -24,11 +24,11 @@ metadata:
 type: Opaque
 data:
   # Base64 encoded secrets
-  DEV_GUEST_TOKEN: "Y3VzdG9tLXNlY3VyZS10b2tlbg=="
-  APPLICATIONINSIGHTS_CONNECTION_STRING: "SW5zdHJ1bWVudGF0aW9uS2V5PWNkMzU2Zjk5LTk0ZTAtNGZlOS05NTcyLWI0YTA5MDYyNWNmOTtJbmdlc3Rpb25FbmRwb2ludD1odHRwczovL2Vhc3R1czItMy5pbi5hcHBsaWNhdGlvbmluc2lnaHRzLmF6dXJlLmNvbS87TGl2ZUVuZHBvaW50PWh0dHBzOi8vZWFzdHVzMi5saXZlZGlhZ25vc3RpY3MubW9uaXRvci5henVyZS5jb20vO0FwcGxpY2F0aW9uSWQ9YzZjMTY2NDktNWYzOS00MzFlLWFkZjItYzcxNWNjZjY2OTlj"
-  AZURE_OPENAI_ENDPOINT_GPT5: "aHR0cHM6Ly96YXZhLXNob3AtYWktZm91bmRyeS5jb2duaXRpdmVzZXJ2aWNlcy5henVyZS5jb20v"
+  DEV_GUEST_TOKEN: ""
+  APPLICATIONINSIGHTS_CONNECTION_STRING: ""
+  AZURE_OPENAI_ENDPOINT_GPT5: ""
   AZURE_OPENAI_API_KEY_GPT5: ""  # Empty for workload identity authentication
-  AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5: "Z3B0LTUtbWluaQ=="  
-  VITE_CHATKIT_DOMAIN_KEY: "ZG9tYWluX3BrXzY5MGE2YTViM2UxNDgxOTA4NGY3ZWI1NzRhMWExMGMzMDQ1MjNjM2MzMWZhMDU4Mg=="
-  DEMO_PASSWORD: "WmF2YVNob3BASWduaXRlMjAyNQ=="  # "ZavaShop@Ignite2025" - Demo accounts password
-  POSTGRES_PASSWORD: "Y2hhbmdlLW1l"  # "change-me" - change this in production
+  AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5: ""
+  VITE_CHATKIT_DOMAIN_KEY: ""
+  DEMO_PASSWORD: ""
+  POSTGRES_PASSWORD: ""
