@@ -18,6 +18,7 @@ from agent_framework import (
 from typing import Any, Never
 import os
 from agent_framework.azure import AzureOpenAIChatClient
+from agent_framework.observability import setup_observability
 from zava_shop_agents import MCPStreamableHTTPToolOTEL
 
 # Use API key if available, otherwise use DefaultAzureCredential (for workload identity)
@@ -256,3 +257,5 @@ workflow = (
         )
     .build()
 )
+
+setup_observability(enable_sensitive_data=True)

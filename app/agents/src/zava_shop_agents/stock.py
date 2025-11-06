@@ -173,4 +173,4 @@ summarizer = Summarizer(chat_client)
 # Set the start node and connect an edge from stock to summarizer.
 workflow = WorkflowBuilder(name="Restocking Workflow").set_start_executor(stock).add_edge(stock, context).add_edge(context, summarizer).build()
 
-setup_observability()
+setup_observability(enable_sensitive_data=True)

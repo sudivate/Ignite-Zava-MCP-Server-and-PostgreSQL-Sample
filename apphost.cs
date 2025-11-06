@@ -67,6 +67,7 @@ var apiService = builder.AddPythonModule("api", "./app/api/", "uvicorn")
     // Extra
     .WithTracing(appInsightsConnectionString)
     .WithEnvironment("DEV_GUEST_TOKEN", envVars["DEV_GUEST_TOKEN"])
+    .WithEnvironment("DEMO_PASSWORD", envVars.TryGetValue("DEMO_PASSWORD", out var demoPassword) ? demoPassword : "admin123")
     .WithExternalHttpEndpoints();
 
 builder.AddViteApp("frontend", "./frontend")

@@ -1,0 +1,10 @@
+apiVersion: monitor.azure.com/v1
+kind: Instrumentation
+metadata:
+  name: default
+  namespace: zava-shop
+spec:
+  settings:
+    autoInstrumentationPlatforms: []
+  destination: # required
+    applicationInsightsConnectionString: ""

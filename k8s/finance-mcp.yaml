@@ -7,7 +7,7 @@ metadata:
     app: finance-mcp
     component: mcp-server
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: finance-mcp
@@ -16,6 +16,8 @@ spec:
       labels:
         app: finance-mcp
         component: mcp-server
+      annotations:
+        instrumentation.opentelemetry.io/private-preview-inject-python: "default"
     spec:
       containers:
       - name: finance-mcp

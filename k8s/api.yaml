@@ -17,6 +17,8 @@ spec:
         app: api
         component: api-server
         azure.workload.identity/use: "true"
+      annotations:
+        instrumentation.opentelemetry.io/private-preview-inject-python: "default"
     spec:
       serviceAccountName: zava-shop-sa
       containers:
@@ -32,6 +34,11 @@ spec:
             secretKeyRef:
               name: zava-secrets
               key: DEV_GUEST_TOKEN
+        - name: DEMO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: zava-secrets
+              key: DEMO_PASSWORD
         - name: FINANCE_MCP_HTTP
           value: "http://finance-mcp-service:8002"
         - name: SUPPLIER_MCP_HTTP
