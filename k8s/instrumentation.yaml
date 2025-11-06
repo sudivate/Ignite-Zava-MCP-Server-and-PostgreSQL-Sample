@@ -7,4 +7,4 @@ spec:
   settings:
     autoInstrumentationPlatforms: []
   destination: # required
-    applicationInsightsConnectionString: "InstrumentationKey=cd356f99-94e0-4fe9-9572-b4a090625cf9;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=c6c16649-5f39-431e-adf2-c715ccf6699c"
+    applicationInsightsConnectionString: ""
