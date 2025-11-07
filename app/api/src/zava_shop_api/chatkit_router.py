@@ -3,6 +3,8 @@ ChatKit router for customer AI chat functionality.
 """
 from datetime import datetime
 from agent_framework import ChatAgent, ai_function
+from agent_framework_azure_ai import AzureAIClient
+from azure.identity.aio import DefaultAzureCredential
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
@@ -20,8 +22,9 @@ from chatkit.types import (
 from chatkit.store import StoreItemType, default_generate_id
 from chatkit.actions import ActionConfig
 from chatkit.widgets import Button, Card, Col, Divider, Image, Row, Text, Title, WidgetRoot, Spacer
-
 from agent_framework_chatkit import ThreadItemConverter, stream_agent_response
+from zava_shop_shared.finance_sqlite import FinanceSQLiteProvider
+from .customers import get_customer_orders
 import os
 
 from typing import AsyncIterator, Callable
@@ -35,38 +38,17 @@ router = APIRouter(prefix="/api/chatkit", tags=["chatkit"])
 # Initialize ChatKit data store (SQLite for development)
 data_store = MemoryStore()
 
-from agent_framework_azure_ai import AzureAIClient
-from azure.identity.aio import DefaultAzureCredential
-
-from zava_shop_shared.finance_sqlite import FinanceSQLiteProvider
-from .customers import get_customer_orders
-
-# Use Managed Identity if API key is not provided
-api_key = os.environ.get("AZURE_OPENAI_API_KEY_GPT5")
-if api_key:
-    logger.info("Using API key authentication for Azure OpenAI")
-    chat_client = AzureOpenAIChatClient(
-        api_key=api_key,
-        endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT_GPT5"),
-        deployment_name=os.environ.get("AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5"),
-        api_version=os.environ.get("AZURE_OPENAI_ENDPOINT_VERSION_GPT5", "2024-02-15-preview")
-    )
-else:
-    logger.info("Using Managed Identity authentication for Azure OpenAI")
-    from azure.identity import DefaultAzureCredential
-    credential = DefaultAzureCredential()
-    
-    # Create a token provider that returns just the token string
-    def get_azure_ad_token() -> str:
-        token = credential.get_token("https://cognitiveservices.azure.com/.default")
-        return token.token
-    
-    chat_client = AzureOpenAIChatClient(
-        ad_token_provider=get_azure_ad_token,
-        endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT_GPT5"),
-        deployment_name=os.environ.get("AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5"),
-        api_version=os.environ.get("AZURE_OPENAI_ENDPOINT_VERSION_GPT5", "2024-02-15-preview")
-    )
+# Azure AI Foundry project configuration
+chat_client = AzureAIClient(
+    async_credential=DefaultAzureCredential(),
+    project_endpoint=os.environ.get(
+        "AZURE_AI_PROJECT_ENDPOINT",
+        ""
+    ),
+    agent_name=os.environ.get("AZURE_AI_PROJECT_AGENT_ID", "zava-customer-agent"),
+    agent_version=os.environ.get("AZURE_AI_PROJECT_AGENT_VERSION", None),
+    model_deployment_name=os.environ.get("AZURE_OPENAI_MODEL_DEPLOYMENT_NAME_GPT5", "gpt-5-mini")
+)
 
 class ChatKitContext(BaseModel):
     """Context passed to ChatKit server."""

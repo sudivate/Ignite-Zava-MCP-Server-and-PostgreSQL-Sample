@@ -60,6 +60,11 @@ spec:
             configMapKeyRef:
               name: zava-config
               key: AZURE_OPENAI_ENDPOINT_VERSION_GPT5
+        - name: AZURE_AI_PROJECT_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: zava-config
+              key: AZURE_AI_PROJECT_ENDPOINT
         - name: APPLICATIONINSIGHTS_CONNECTION_STRING
           valueFrom:
             secretKeyRef:

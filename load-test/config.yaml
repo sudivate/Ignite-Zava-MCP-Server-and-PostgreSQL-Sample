@@ -1,0 +1,18 @@
+version: v0.1
+testName: zava-shop-chatkit-load-test
+testPlan: locustfile.py
+description: Load test for Zava Shop Customer Chat (ChatKit) endpoint
+engineInstances: 1
+configurationFiles:
+  - requirements.txt
+env:
+  - name: HOST
+    value: https://{Host}.com
+  - name: ENABLE_LOGGING
+    value: "False"
+failureCriteria:
+  - avg(response_time_ms) > 5000
+  - percentage(error) > 10
+autoStop:
+  errorPercentage: 90
+  timeWindow: 60

@@ -1,0 +1,4 @@
+@baseUrl = https://zavalife.com/api/chatkit
+
+GET {{baseUrl}}/
+Content-Type: application/json
