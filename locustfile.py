@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Python
 import os
 import logging
@@ -217,6 +218,9 @@ class ChatKitUser(HttpUser):
 # To run with specific configuration:
 # locust -f locustfile.py -u 50 -r 5 --run-time 5m --host {HOST} --html report.html
 =======
+=======
+import os
+>>>>>>> 6aba0dc (load test)
 from locust import HttpUser, task, between
 import random
 
@@ -274,13 +278,13 @@ TEST_INPUTS = [
 ]
 
 class ChatUser(HttpUser):
-    wait_time = between(1, 3)
+    wait_time = between(2, 10)
 
     @task
     def chat_with_bot(self):
         # Login
         login_response = self.client.post(
-            "/api/login", json={"username": "stacey", "password": "stacey123"})
+            "/api/login", json={"username": "stacey", "password": os.environ.get("TEST_USER_PASSWORD", "stacey123")})
         access_token = login_response.json()['access_token']
 
         payload = {
