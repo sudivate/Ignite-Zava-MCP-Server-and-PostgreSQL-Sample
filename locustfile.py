@@ -1,3 +1,4 @@
+# Python
 <<<<<<< HEAD
 <<<<<<< HEAD
 # Python
@@ -220,73 +221,75 @@ class ChatKitUser(HttpUser):
 =======
 =======
 import os
->>>>>>> 6aba0dc (load test)
 from locust import HttpUser, task, between
-import random
+from dotenv import load_dotenv
 
-TEST_INPUTS = [
-    "Where is my order?",
-    "Can you tell me the status of my recent order?",
-    "I placed an order last week, has it shipped yet?",
-    "What's the tracking number for my order?",
-    "When will my order arrive?",
-    "I haven't received my order yet, can you help?",
-    "How can I check my order status?",
-    "Is my order on the way?",
-    "Can you give me an update on order #12345?",
-    "I need to know when my package will be delivered",
-    "Did my order ship already?",
-    "What's happening with my purchase?",
-    "I ordered something 3 days ago, where is it?",
-    "Can you track my order for me?",
-    "My order hasn't arrived, what's going on?",
-    "How long does it usually take for orders to arrive?",
-    "I'm waiting for an order, can you check on it?",
-    "Is there any delay with my order?",
-    "Can I get the delivery status of my order?",
-    "When was my order shipped?",
-    "I want to know about my recent purchase",
-    "Can you look up my order history?",
-    "What's the estimated delivery date for my order?",
-    "Has my order been processed yet?",
-    "I need help tracking my package",
-    "Where's the item I ordered last Tuesday?",
-    "Can you tell me if my order is still processing?",
-    "I'm expecting a delivery, when will it come?",
-    "Is my order out for delivery?",
-    "Can you confirm my order was received?",
-    "I want to check on the status of my shipment",
-    "Has my order left the warehouse yet?",
-    "When should I expect my order to arrive?",
-    "I ordered multiple items, have they all shipped?",
-    "Can you give me tracking information?",
-    "My order is taking longer than expected, why?",
-    "I need to know if my order is on schedule",
-    "Has there been any update on my order?",
-    "Can you tell me where my package is right now?",
-    "I want to track my recent order",
-    "Is my order delayed?",
-    "When did you ship my order?",
-    "I placed an order yesterday, can you confirm it?",
-    "What's the current status of my purchase?",
-    "Can you help me locate my order?",
-    "I'm concerned about my order, it hasn't arrived",
-    "How do I find out when my order will be delivered?",
-    "Can you check if my order has been dispatched?",
-    "I need an update on my order please",
-    "Where can I see my order tracking details?",
+# Load environment variables from .env file if present
+load_dotenv()
+
+# Sample chat messages for realistic load testing
+CHAT_MESSAGES = [
+    "What products do you have available?",
+    "Can you help me find running shoes?",
+    "What are your store hours?",
+    "Do you have any sales or discounts?",
+    "I need help tracking my order",
+    "What's your return policy?",
+    "Can you recommend a good laptop?",
+    "Do you ship internationally?",
+    "Tell me about your electronics section",
+    "I'm looking for outdoor gear",
+    "What brands do you carry?",
+    "Can I check my order history?",
+    "Do you have gift cards?",
+    "What payment methods do you accept?",
+    "How can I contact customer support?",
 ]
 
-class ChatUser(HttpUser):
-    wait_time = between(2, 10)
+# Customer credentials for authentication
+# These are demo customers that should exist in the system
+CUSTOMER_CREDENTIALS = [
+    {"username": "tracey.lopez.4", "password": "tracey123"},
+    {"username": "michael.wilson.5", "password": "michael123"},
+    {"username": "sarah.davis.6", "password": "sarah123"},
+    {"username": "james.brown.7", "password": "james123"},
+    {"username": "jennifer.taylor.8", "password": "jennifer123"},
+]
 
-    @task
-    def chat_with_bot(self):
-        # Login
-        login_response = self.client.post(
-            "/api/login", json={"username": "stacey", "password": os.environ.get("TEST_USER_PASSWORD", "stacey123")})
-        access_token = login_response.json()['access_token']
+class ChatKitUser(HttpUser):
+    """
+    Locust user simulating customer chat interactions with the Zava Shop ChatKit endpoint.
+    Tests authentication, chat message sending, and streaming responses.
+    """
+    wait_time = between(2, 5)  # Wait 2-5 seconds between tasks (realistic user behavior)
+    host = os.getenv('HOST', '')
+    timeout_duration = 90  # seconds
 
+    def on_start(self):
+        """Initialize user session and authenticate."""
+        # Set debug mode from environment variable
+        self.ENABLE_LOGGING = os.getenv('ENABLE_LOGGING', 'True') == 'True'
+        
+        # Set up logging
+        if self.ENABLE_LOGGING:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.WARNING)
+        
+        # Select random customer credentials
+        self.credentials = random.choice(CUSTOMER_CREDENTIALS)
+        self.access_token = None
+        
+        # Authenticate to get access token
+        self.authenticate()
+
+    def authenticate(self):
+        """Authenticate user and obtain JWT token."""
+        url = "/api/login"
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
         payload = {
             "type": "threads.create",
             "params":
@@ -305,4 +308,3 @@ class ChatUser(HttpUser):
         self.client.post(
             "/api/logout", headers={"Authorization": f"Bearer {access_token}"}
         )
->>>>>>> 2eff61a (Add a load test for the chat endpoint)
