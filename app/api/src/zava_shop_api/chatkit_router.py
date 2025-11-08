@@ -38,7 +38,7 @@ router = APIRouter(prefix="/api/chatkit", tags=["chatkit"])
 # Initialize ChatKit data store (SQLite for development)
 data_store = MemoryStore()
 
-from agent_framework_azure_ai import AzureAIAgentClientV2
+from agent_framework_azure_ai import AzureAIAgentClient
 from azure.identity.aio import DefaultAzureCredential
 
 from zava_shop_shared.finance_sqlite import FinanceSQLiteProvider

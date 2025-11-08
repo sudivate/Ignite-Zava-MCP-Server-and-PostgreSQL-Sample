@@ -90,19 +90,21 @@ class StockExtractor(Executor):
 
     def __init__(self, openai_client: AzureOpenAIChatClient, id: str = "Stock Agent"):
         self.openai_client = openai_client
+        # Create agent once with tools
+        self.agent = openai_client.create_agent(
+            name=id,
+            instructions=(
+                "You determine strategies for restocking items. Consult the tools for stock levels and prioritise which items to restock first."
+            ),
+            tools=finance_mcp,
+        )
         super().__init__(id=id)
 
     @handler
     async def handle(self, message: ChatMessage, ctx: WorkflowContext[StockExtractorResult]) -> None:
         """Extract department data"""
-        agent = self.openai_client.create_agent(
-                instructions=(
-                    "You determine strategies for restocking items. Consult the tools for stock levels and prioritise which items to restock first."
-                ),
-                tools=finance_mcp,
-                )
-        response = await agent.run(message, response_format=StockItemCollection)
-
+        # Use the pre-created agent
+        response = await self.agent.run(message, response_format=StockItemCollection)
         result = StockExtractorResult(context=message.text, messages=[message.text for message in response.messages if message.text.strip()], collection=response.value)
         await ctx.send_message(result)
 
@@ -115,6 +117,7 @@ class ContextExecutor(Executor):
     def __init__(self, responses_client: AzureOpenAIChatClient, id: str = "Prioritization Agent"):
         # Create a domain specific agent using your configured AzureOpenAIChatClient.
         self.agent = responses_client.create_agent(
+            name= id,
             instructions=(
                 "You look at the context to prioritize restocking items."
             ),
@@ -144,6 +147,7 @@ class Summarizer(Executor):
     def __init__(self, chat_client: AzureOpenAIChatClient, id: str = "Summarizer Agent"):
         # Create a domain specific agent that summarizes content.
         self.agent = chat_client.create_agent(
+            name= id,
             instructions=(
                 "You are an excellent workflow summarizer. You summarize the restocking task and what the user asked for into an overview. "
                 "Do not list the items one by one as the user will get these in the final output."
