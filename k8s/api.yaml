@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api
+  name: agent-api
   namespace: zava-shop
   labels:
-    app: api
+    app: agent-api
     component: api-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api
+      app: agent-api
   template:
     metadata:
       labels:
-        app: api
+        app: agent-api
         component: api-server
         azure.workload.identity/use: "true"
       annotations:
@@ -102,14 +102,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-service
+  name: agent-api-service
   namespace: zava-shop
   labels:
-    app: api
+    app: agent-api
     component: api-server
 spec:
   selector:
-    app: api
+    app: agent-api
   ports:
   - port: 8000
     targetPort: 8000
