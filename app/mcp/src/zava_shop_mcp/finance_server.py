@@ -7,6 +7,7 @@ finance agents with order policies, contracts, sales analysis, and inventory.
 
 The server uses pre-written SQL queries (not dynamically generated SQL) with SQLite ORM.
 """
+from opentelemetry import trace
 from opentelemetry.instrumentation.auto_instrumentation import initialize
 initialize()
 from datetime import datetime, timedelta
@@ -47,6 +48,20 @@ from zava_shop_mcp.models import (
     InventoryStatusResult,
     StoreResult,
 )
+
+# from openinference.instrumentation.mcp import MCPInstrumentor
+# from opentelemetry import trace
+# from opentelemetry.sdk.trace import TracerProvider
+# from opentelemetry.sdk.trace.export import BatchSpanProcessor
+# from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
+
+# exporter = AzureMonitorTraceExporter.from_connection_string(os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"])
+# tracer_provider = TracerProvider()
+# trace.set_tracer_provider(tracer_provider)
+# tracer = trace.get_tracer(__name__)
+# span_processor = BatchSpanProcessor(exporter, schedule_delay_millis=60000)
+# trace.get_tracer_provider().add_span_processor(span_processor)
+# MCPInstrumentor().instrument(tracer_provider=tracer_provider)
 
 GUEST_TOKEN = os.getenv("DEV_GUEST_TOKEN", "dev-guest-token")
 
@@ -89,7 +104,7 @@ async def health_check(request: Request) -> Response:
 
 @mcp.tool()
 async def get_company_order_policy(
-    department: Annotated[Optional[str], Field(description="Department name to filter policies")] = None
+    department: Annotated[str, Field(description="Department name to filter policies")] = ""
 ) -> list[CompanyPolicyResult]:
     """
     Get company order processing policies and budget authorization rules.
@@ -270,8 +285,8 @@ async def get_supplier_contract(
 @mcp.tool()
 async def get_historical_sales_data(
     days_back: Annotated[int, Field(description="Number of days to look back")] = 30,
-    store_id: Annotated[Optional[int], Field(description="Store ID to filter results")] = None,
-    category_name: Annotated[Optional[str], Field(description="Category name to filter results")] = None
+    store_id: Annotated[int, Field(description="Store ID to filter results")] = -1,
+    category_name: Annotated[str, Field(description="Category name to filter results")] = ""
 ) -> list[SalesDataResult]:
     """
     Get historical sales data with revenue, order counts, and customer metrics.
@@ -332,7 +347,7 @@ async def get_historical_sales_data(
                 Order.order_date >= cutoff_date.date()
             )
 
-            if store_id is not None:
+            if store_id != -1 and store_id != 0:
                 stmt = stmt.where(Order.store_id == store_id)
 
             if category_name:
@@ -357,8 +372,8 @@ async def get_historical_sales_data(
 
 @mcp.tool()
 async def get_current_inventory_status(
-    store_id: Annotated[Optional[int], Field(description="Store ID to filter results")] = None,
-    category_name: Annotated[Optional[str], Field(description="Category name to filter results")] = None,
+    store_id: Annotated[int, Field(description="Store ID to filter results")] = -1,
+    category_name: Annotated[str, Field(description="Category name to filter results")] = "",
     low_stock_threshold: Annotated[int, Field(description="Low stock threshold")] = 10
 ) -> list[InventoryStatusResult]:
     """
@@ -387,78 +402,114 @@ async def get_current_inventory_status(
         >>> low_stock_items = [row for row in data['r']
         >>>                    if row[data['c'].index('low_stock_alert')]]
     """
-    try:
-        logger.info(
-            f"Retrieving current inventory status for store_id: {store_id},"
-            f" category_name: {category_name}, "
-            f" low_stock_threshold: {low_stock_threshold}")
-        await db.create_pool()
-        async with db.get_session() as session:
-            # Calculate inventory and retail values
-            inventory_value = (
-                Inventory.stock_level * Product.cost
-            ).label("inventory_value")
-            retail_value = (
-                Inventory.stock_level * Product.base_price
-            ).label("retail_value")
 
-            # Calculate low stock alert
-            low_stock_alert = case(
-                (Inventory.stock_level <= low_stock_threshold, True),
-                else_=False,
-            ).label("low_stock_alert")
+    # Get tracer and create a span
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span(
+        "finance_mcp.get_current_inventory_status",
+        attributes={
+            "mcp.tool": "get_current_inventory_status",
+            "store_id": store_id,
+            "category_name": category_name,
+            "low_stock_threshold": low_stock_threshold,
+        }
+    ) as span:
+        try:
+            logger.info(
+                f"Retrieving current inventory status for store_id: {store_id},"
+                f" category_name: {category_name}, "
+                f" low_stock_threshold: {low_stock_threshold}")
+            
+                # DEMO: Crash pod after 3 requests to simulate pod restart
+            # import os
+            # call_count_file = "/tmp/inventory_call_count.txt"
+            
+            # if os.path.exists(call_count_file):
+            #     with open(call_count_file, "r") as f:
+            #         count = int(f.read().strip())
+            # else:
+            #     count = 0
+            
+            # count += 1
+            # with open(call_count_file, "w") as f:
+            #     f.write(str(count))
+            
+            # if count >= 3:
+            #     logger.error(f"DEMO: Simulating pod crash after {count} calls")
+            #     import sys
+            #     sys.exit(1)  # Force immediate pod crash
+            
+            await db.create_pool()
+            async with db.get_session() as session:
+                # Calculate inventory and retail values
+                inventory_value = (
+                    Inventory.stock_level * Product.cost
+                ).label("inventory_value")
+                retail_value = (
+                    Inventory.stock_level * Product.base_price
+                ).label("retail_value")
 
-            # Build query using ORM
-            stmt = select(
-                Store.store_name,
-                Store.is_online,
-                Product.product_name,
-                Product.sku,
-                Category.category_name,
-                ProductType.type_name.label("product_type"),
-                Inventory.stock_level,
-                Product.cost,
-                Product.base_price,
-                inventory_value,
-                retail_value,
-                low_stock_alert,
-            ).select_from(Inventory).join(
-                Store, Inventory.store_id == Store.store_id
-            ).join(
-                Product, Inventory.product_id == Product.product_id
-            ).join(
-                Category, Product.category_id == Category.category_id
-            ).join(
-                ProductType, Product.type_id == ProductType.type_id
-            ).where(
-                Product.discontinued.is_(False)
-            )
+                # Calculate low stock alert
+                low_stock_alert = case(
+                    (Inventory.stock_level <= low_stock_threshold, True),
+                    else_=False,
+                ).label("low_stock_alert")
 
-            if store_id is not None:
-                stmt = stmt.where(Inventory.store_id == store_id)
-
-            if category_name:
-                stmt = stmt.where(
-                    func.upper(Category.category_name) == category_name.upper()
+                # Build query using ORM
+                stmt = select(
+                    Store.store_name,
+                    Store.is_online,
+                    Product.product_name,
+                    Product.sku,
+                    Category.category_name,
+                    ProductType.type_name.label("product_type"),
+                    Inventory.stock_level,
+                    Product.cost,
+                    Product.base_price,
+                    inventory_value,
+                    retail_value,
+                    low_stock_alert,
+                ).select_from(Inventory).join(
+                    Store, Inventory.store_id == Store.store_id
+                ).join(
+                    Product, Inventory.product_id == Product.product_id
+                ).join(
+                    Category, Product.category_id == Category.category_id
+                ).join(
+                    ProductType, Product.type_id == ProductType.type_id
+                ).where(
+                    Product.discontinued.is_(False)
                 )
 
-            stmt = stmt.order_by(
-                Store.store_name,
-                Category.category_name,
-                Inventory.stock_level.asc(),
-            )
+                if store_id != -1 and store_id != 0:
+                    stmt = stmt.where(Inventory.store_id == store_id)
 
-            result = await session.execute(stmt)
-            rows = result.mappings().all()
-            return [InventoryStatusResult(**row) for row in rows]
-    except Exception as e:
-        logger.error(f"Error in get_current_inventory_status: {e}")
-        raise e
+                if category_name:
+                    stmt = stmt.where(
+                        func.upper(Category.category_name) == category_name.upper()
+                    )
+
+                stmt = stmt.order_by(
+                    Store.store_name,
+                    Category.category_name,
+                    Inventory.stock_level.asc(),
+                )
+
+                result = await session.execute(stmt)
+                rows = result.mappings().all()
+                return [InventoryStatusResult(**row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error in get_current_inventory_status: {e}")
+            # Record the exception in the span
+            span.record_exception(e)
+            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+            logger.error(f"Error in get_current_inventory_status: {e}")
+            raise e
 
 
 @mcp.tool()
 async def get_stores(
-    store_name: Annotated[Optional[str], Field(description="Store name to filter results")] = None
+    store_name: Annotated[str, Field(description="Store name to filter results")] = ""
 ) -> list[StoreResult]:
     """
     Get store information with optional filtering by name.
@@ -542,4 +593,4 @@ if __name__ == "__main__":
         port,
     )
     logger.info("Guest token is '%s******%s'", GUEST_TOKEN[0:1], GUEST_TOKEN[-2:])
-    mcp.run(transport="http", host=host, port=port, path="/mcp")
+    mcp.run(transport="http", host=host, port=port, path="/mcp", stateless_http=True)
